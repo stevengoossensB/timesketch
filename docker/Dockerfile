@@ -1,37 +1,66 @@
-# Use the official Docker Hub Ubuntu 18.04 base image
-FROM ubuntu:18.04
+FROM alpine:latest
+LABEL maintainer:"Steven Goossens"
+LABEL description:"Timesketch Docker image based on Alpine"
+
+ENV LANG en_US.UTF-8
+ENV LC_ALL en_US.UTF-8
+ENV CFLAGS="$CFLAGS -D_GNU_SOURCE"
 
 # Update the base image
-RUN apt-get update && apt-get -y upgrade && apt-get -y dist-upgrade
+RUN apk update && apk upgrade
 
-# Setup install environment and Timesketch dependencies
-RUN apt-get --no-install-recommends -y install apt-transport-https \
-                       apt-utils \
-                       ca-certificates \
-                       git \
-                       libffi-dev \
-                       lsb-release \
-                       python3-dev \
-                       python3-pip \
-                       python3-psycopg2
+# Install dependencies
+RUN apk add --no-cache wget \
+             sudo \
+             nano \
+             curl \
+             bash \
+             openssl \
+             python3 \
+             python3-dev \
+             py3-pip \
+             py3-setuptools \
+             bash \
+             openssl-dev \
+             xz-dev \
+             zeromq \
+             libffi-dev \
+             py3-lz4 \
+             py3-openssl \
+             py3-numpy \
+             py3-cryptography \
+             postgresql-dev \
+             build-base \
+             git \
+             linux-headers
 
-# Install Plaso, nodejs and yarn.
-RUN apt-get --no-install-recommends -y install software-properties-common
-RUN add-apt-repository ppa:gift/stable && apt-get update
-RUN apt-get update && apt-get --no-install-recommends -y install plaso-tools
+ARG TZ=Europe/Amsterdam
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN apk add curl wget sudo tzdata && adduser -D plaso
 
 # Use Python 3 pip (pip3) to install Timesketch
-RUN pip3 install timesketch
+RUN pip3 install --trusted-host pypi.python.org --trusted-host pypi.org --trusted-host files.pythonhosted.org timesketch psycopg2-binary
+
+RUN git config --global http.sslVerify false && git clone --branch=master \
+               --depth=1 \
+               https://github.com/log2timeline/plaso.git \
+               /plaso \
+  && cd /plaso \
+#  && pip3 install --trusted-host pypi.python.org --trusted-host pypi.org --trusted-host files.pythonhosted.org --upgrade pip \
+  #&& wget --no-check-certificate https://files.pythonhosted.org/packages/86/4e/332f0a0f96e0754fcf7df12966edc0882910a4e4d34f4f42c2dd887595ad/lz4-3.0.2.tar.gz \
+  && pip3 install --trusted-host pypi.python.org --trusted-host pypi.org --trusted-host files.pythonhosted.org --upgrade pip \
+  && pip3 install --trusted-host pypi.python.org --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt \
+  && pip3 install --trusted-host pypi.python.org --trusted-host pypi.org --trusted-host files.pythonhosted.org elasticsearch\
+  && python3 setup.py install
+
 
 # Copy Timesketch config files into /etc/timesketch
 ADD . /tmp/timesketch
 RUN mkdir /etc/timesketch
-RUN cp /tmp/timesketch/data/timesketch.conf /etc/timesketch/
-RUN cp /tmp/timesketch/data/features.yaml /etc/timesketch/
-RUN cp /tmp/timesketch/data/sigma_config.yaml /etc/timesketch/
 
 # Copy the entrypoint script into the container
-COPY docker/docker-entrypoint.sh /
+COPY docker-entrypoint.sh /
 RUN chmod a+x /docker-entrypoint.sh
 
 # Expose the port used by Timesketch
