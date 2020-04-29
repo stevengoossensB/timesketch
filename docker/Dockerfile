@@ -1,6 +1,6 @@
 FROM alpine:latest
-LABEL maintainer:"Steven Goossens"
-LABEL description:"Timesketch Docker image based on Alpine"
+LABEL maintainer="Steven Goossens"
+LABEL description="Timesketch Docker image based on Alpine"
 
 ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
@@ -49,9 +49,9 @@ RUN git config --global http.sslVerify false && git clone --branch=master \
   && cd /plaso \
 #  && pip3 install --trusted-host pypi.python.org --trusted-host pypi.org --trusted-host files.pythonhosted.org --upgrade pip \
   #&& wget --no-check-certificate https://files.pythonhosted.org/packages/86/4e/332f0a0f96e0754fcf7df12966edc0882910a4e4d34f4f42c2dd887595ad/lz4-3.0.2.tar.gz \
-  && pip3 install --trusted-host pypi.python.org --trusted-host pypi.org --trusted-host files.pythonhosted.org --upgrade pip \
-  && pip3 install --trusted-host pypi.python.org --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt \
-  && pip3 install --trusted-host pypi.python.org --trusted-host pypi.org --trusted-host files.pythonhosted.org elasticsearch\
+  && pip3 install --upgrade pip \
+  && pip3 install  -r requirements.txt \
+  && pip3 install  elasticsearch\
   && python3 setup.py install
 
 
