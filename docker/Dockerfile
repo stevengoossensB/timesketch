@@ -40,15 +40,16 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apk add curl wget sudo tzdata && adduser -D plaso
 
 # Use Python 3 pip (pip3) to install Timesketch
-RUN pip3 install --trusted-host pypi.python.org --trusted-host pypi.org --trusted-host files.pythonhosted.org timesketch psycopg2-binary
+RUN pip3 install --trusted-host pypi.python.org --trusted-host pypi.org --trusted-host files.pythonhosted.org psycopg2-binary
+RUN git config --global http.sslVerify false
+RUN git clone https://github.com/google/timesketch.git
+RUN cd timesketch && pip3 install -r requirements.txt && python3 setup.py install 
 
-RUN git config --global http.sslVerify false && git clone --branch=master \
+RUN git clone --branch=master \
                --depth=1 \
                https://github.com/log2timeline/plaso.git \
                /plaso \
   && cd /plaso \
-#  && pip3 install --trusted-host pypi.python.org --trusted-host pypi.org --trusted-host files.pythonhosted.org --upgrade pip \
-  #&& wget --no-check-certificate https://files.pythonhosted.org/packages/86/4e/332f0a0f96e0754fcf7df12966edc0882910a4e4d34f4f42c2dd887595ad/lz4-3.0.2.tar.gz \
   && pip3 install --upgrade pip \
   && pip3 install  -r requirements.txt \
   && pip3 install  elasticsearch\
